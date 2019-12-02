@@ -1,0 +1,111 @@
+*Syntax:
+* {
+* <LayerType> <LayerKey> <LayerName> <HeaderLength(in Bytes)> <nextLayerType(Use none for no-known-nextlayer)> 
+* <optionLayerType(Use none for no-options>>
+*
+* <FieldType> <FieldName> <FieldLength(in Bits)> <should display 0,1> <Optional:One of the tokens: Key,Length or -><n=0..3> where n is the scratchpad location this value shoudl be parsed into>
+* }
+* LayerType: name must match previous layer referring to it 
+* FieldType: one of { BITS, BYTES, IPV4ADDR, IPV6ADDR, MAC, VARBYTES}
+* Special cases:
+* 0 on the header length means variable length header
+* OptionLayer cannot have a key. LayerType of the option
+* layer has to be the LayerName itself
+* IPv6 options have a key, so they are not considered options
+*
+*
+{
+    {
+        Datalink 25944 Ethernet 14 EProto none
+        MAC dstMac 48 0 
+        MAC srcMac 48 1
+        BYTES eType 16 0 Key
+    }
+    {
+        EProto 33024 Qtag 4 EProto none
+        BITS pcp 3 0
+        BITS dei 1 0
+        BITS vid 12 1
+        BYTES eType 16 0 Key
+    }
+    {
+        EProto 2048 IPv4 20 IPProto IPOpt
+        BITS version 4 0
+        BITS headerLength 4 0 ->0
+        BITS dscp 6 0
+        BITS ecn 2 0
+        BYTES totalLength 16 0
+        BYTES id 16 0
+        BITS flags 3 0
+        BITS fragOffset 13 0
+        BYTES ttl 8 1
+        BYTES ipProto 8  0 Key
+        BYTES checkSum 16 0
+        IPV4ADDR srcAddress 32 1
+        IPV4ADDR dstAddress 32 1
+    }
+    {
+        IPProto 6081 Geneve 8 Datalink GeneveOpt
+        BITS version 2 0
+        BITS optionsLength 6 0 ->0
+        BITS oamPacket 1 0
+        BITS criticalOption 1 0
+        BITS rsvd 6 0
+        BYTES eType 16 0 Key
+        BYTES vni 24 1
+        BYTES rsvd1 8 0
+    }
+    {
+        GeneveOpt 0 GeneveOpt 0 none none
+        BYTES class 16 1
+        BYTES type  8 1
+        BITS flags 3 0
+        BITS length 5 0 Length
+        VARBYTES data 0 1
+    }
+    {
+        EProto 2054 Arp 28 none none
+        BYTES hwType 16 0
+        BYTES eType 16 0
+        BYTES hwSize 8 0
+        BYTES protSize 8 0
+        BYTES opCode 16 1
+        MAC senderMac 48 0
+        IPV4ADDR senderv4 32 1
+        MAC tgtMac 48 0
+        IPV4ADDR tgtv4 32 1
+    }
+    {
+        IPProto 1 ICMP 8 none none
+        BYTES type 8 1
+        BYTES code 8 1
+        BYTES checksum 16 0
+        BYTES identifier 16 0
+        BYTES sequenceNum 16 0  
+    }
+    {
+        IPProto 6 TCP 20 TCPOpt TCPOpt
+        BYTES srcPort 16 1
+        BYTES dstPort 16 1
+        BYTES seqNum 32 1
+        BYTES ackNum 32 1
+        BITS length 4 0 ->0
+        BITS flags 12 0
+        BYTES wdwSize 16 0
+        BYTES ckSum 16 0
+        BYTES urgentPtr 16 0
+    }
+    {
+        TCPOpt 0 TCPOpt 0 none none
+        BYTES kind 8 1 ->0
+        VARLENGTH length 8 0 Length
+        VARBYTES data 0 1
+    }
+    {
+        IPProto 17 UDP 8 none none
+        BYTES srcPort 16 1
+        BYTES dstPort 16 1
+        BYTES length 16 1
+        BYTES ckSum 16 0
+    }
+}
