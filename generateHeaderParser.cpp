@@ -24,12 +24,15 @@ static vector<string> GenTypeToOpType = {
     "FLDTYPE_IPv4ADDR",
     "FLDTYPE_IPv6ADDR",
     "FLDTYPE_MAC",
-    "FLDTYPE_VARBYTES"
+    "FLDTYPE_VARBYTES",
+    "FLDTYPE_OPTBYTES"
 };
 
 static std::string convertFieldType(string &str) {
     uint32_t opType = 0;
-    if(str == "VARBYTES") {
+    if(str == "OPTBYTES") {
+        opType=7;
+    } else if(str == "VARBYTES") {
         opType=6;
     } else if(str == "MAC") {
         opType=5;
@@ -49,26 +52,26 @@ static std::string convertFieldType(string &str) {
 
 class SubRecord {
 public:
-    SubRecord():bitLength(0),flag(true),nextKey(false),
-            length(false),scratchOffset(-1){};
+    SubRecord():bitLength(0),nextKey(false),
+            length(false), scratchOffset(-1), outSeq(-1){};
     void reset() {
         bitLength = 0;
-        flag = false;
         nextKey = false;
         length = false;
         scratchOffset = -1;
+        outSeq = -1;
         fldName.clear();
         fldTypeName.clear();
     }
     uint32_t bitLength, offset;
-    int scratchOffset;
+    int scratchOffset, outSeq;
     std::string fldName, fldTypeName;
-    bool flag, nextKey, length;
+    bool nextKey, length;
 };
 
 class Record {
 public:
-    Record():layerTypeId(0),layerId(0),nextLayerTypeId(0),layerKey(0),length(0),optionLayerTypeId(0),optionLayerId(0){};
+    Record():layerTypeId(0),layerId(0),nextLayerTypeId(0),layerKey(0),length(0),optionLayerTypeId(0),optionLayerId(0),numOutArgs(0){};
     void reset() {
         layerType.clear();
         layerName.clear();
@@ -78,11 +81,12 @@ public:
         optionLayerId = 0;
         optionLayerTypeId = 0;
         optionLayerName.clear();
+        numOutArgs = 0;
         fields.clear();
     }
     std::string layerType, layerName, nextLayerType, optionLayerName;
     uint32_t layerTypeId, layerId, layerKey, length, nextLayerTypeId, 
-    optionLayerTypeId, optionLayerId;
+    optionLayerTypeId, optionLayerId,numOutArgs;
     vector<SubRecord> fields; 
 };
 
@@ -177,7 +181,7 @@ static int ReadRecord(fstream &_protoData,Record &rec){
             istringstream stream(str);
             string opt;
             stream >> srec.fldTypeName >> srec.fldName  >> srec.bitLength 
-                    >> srec.flag;
+                    >> srec.outSeq;
             stream >> opt;
             if(opt.find("Key") != string::npos) {
                 srec.nextKey = true;
@@ -196,6 +200,9 @@ static int ReadRecord(fstream &_protoData,Record &rec){
             srec.offset = offset; 
             offset += srec.bitLength;
             rec.fields.push_back(srec);
+            if((srec.outSeq > 0) && (srec.outSeq > rec.numOutArgs)) {
+                rec.numOutArgs = srec.outSeq;
+            }
         }
         
     } catch( ios_base:: failure& fail) {
@@ -264,22 +271,29 @@ int main() {
                 << rec.layerTypeId << ", " << rec.layerId << ", " 
                 << rec.nextLayerTypeId << ", "
                 << rec.optionLayerTypeId << ", " 
-                << rec.optionLayerId << "){};" << endl;
+                << rec.optionLayerId << ", "
+                << rec.numOutArgs << "){};" << endl;
         layerHeader << "    " << "virtual int configure();" << endl;
         if(rec.optionLayerName != "none") {
             layerHeader << "    " << "virtual void getOptionLength(ParseInfo &p);" << endl;
         }
         layerImpl << "int " << rec.layerName << "Layer::configure() {" << endl;
         bool var_bytes = false;
+        bool opt_bytes = false;
         for(auto &fld: rec.fields) {
-            layerImpl << "    addField(\"" << fld.fldName << "\", " << fld.bitLength << ", " << fld.offset << ", "<< "PDF::" << fld.fldTypeName << ", " << fld.flag << ", " << fld.nextKey << ", " << fld.length << ", " <<fld.scratchOffset << ");" << endl;
+            layerImpl << "    addField(\"" << fld.fldName << "\", " << fld.bitLength << ", " << fld.offset << ", "<< "PDF::" << fld.fldTypeName << ", " << fld.nextKey << ", " << fld.length << ", " << fld.scratchOffset << ", " << fld.outSeq <<");" << endl;
         if(fld.fldTypeName == "FLDTYPE_VARBYTES") {
             var_bytes = true;
+        } else if(fld.fldTypeName == "FLDTYPE_OPTBYTES") {
+            opt_bytes = true;
         }
-        }
+    }
         if(var_bytes) {
             layerHeader << "    " << "virtual uint32_t getVariableDataLength(uint32_t hdrLength);" << endl;
             layerHeader << "    " << "virtual uint32_t getVariableHeaderLength(uint32_t fldVal);" << endl;
+        }
+        if(opt_bytes) {
+            layerHeader << "    " << "virtual bool hasOptBytes(ParseInfo &p);" << endl;
         }
         layerHeader << "    " << "virtual void getFormatString(boost::format &fmtStr);" << endl;
 	layerHeader << "};" << endl << endl;
@@ -288,6 +302,9 @@ int main() {
         if(var_bytes) {
             layerImpl << "uint32_t " << str << "::getVariableDataLength(uint32_t hdrLength) {" << endl << "}" << endl << endl;
             layerImpl << "uint32_t " << str << "::getVariableHeaderLength(uint32_t fldVal) {" << endl << "}" << endl << endl;
+        }
+        if(opt_bytes) {
+            layerImpl << "uint32_t " << str << "::hasOptBytes(ParseInfo &p) {" << endl << "}" << endl << endl;
         }
         if(rec.optionLayerName != "none") {
             layerImpl << "void " << str << "::getOptionLength(ParseInfo &p) {" << endl;
