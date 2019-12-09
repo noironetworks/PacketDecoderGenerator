@@ -259,8 +259,10 @@ int main() {
     int ret; 
 
     while((ret = ReadRecord(protoData,rec)) == 0) {
+        string commentStr = "/**\n * Layer implementing " + rec.layerName + "\n */";
         string str;
         str = rec.layerName + "Layer";
+        layerHeader << commentStr << endl;
         layerHeader << "class " << rec.layerName << "Layer: public PacketDecoderLayer {" << endl;
         layerHeader << "public:" << endl;
         layerHeader << "    " << rec.layerName << 

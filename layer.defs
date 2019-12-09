@@ -65,7 +65,7 @@
         VARBYTES data 0 0
     }
     {
-        EProto 2054 Arp 28 none none
+        EProto 2054 ARP 28 none none
         BYTES hwType 16 0
         BYTES eType 16 0
         BYTES hwSize 8 0
