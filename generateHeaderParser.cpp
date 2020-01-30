@@ -53,18 +53,20 @@ static std::string convertFieldType(string &str) {
 class SubRecord {
 public:
     SubRecord():bitLength(0),nextKey(false),
-            length(false), scratchOffset(-1), outSeq(-1){};
+            length(false), scratchOffset(-1),
+            outSeq(-1), tupleSeq(-1) {};
     void reset() {
         bitLength = 0;
         nextKey = false;
         length = false;
         scratchOffset = -1;
         outSeq = -1;
+        tupleSeq = -1;
         fldName.clear();
         fldTypeName.clear();
     }
     uint32_t bitLength, offset;
-    int scratchOffset, outSeq;
+    int scratchOffset, outSeq, tupleSeq;
     std::string fldName, fldTypeName;
     bool nextKey, length;
 };
@@ -181,7 +183,7 @@ static int ReadRecord(fstream &_protoData,Record &rec){
             istringstream stream(str);
             string opt;
             stream >> srec.fldTypeName >> srec.fldName  >> srec.bitLength 
-                    >> srec.outSeq;
+                    >> srec.outSeq >> srec.tupleSeq;
             stream >> opt;
             if(opt.find("Key") != string::npos) {
                 srec.nextKey = true;
@@ -283,7 +285,7 @@ int main() {
         bool var_bytes = false;
         bool opt_bytes = false;
         for(auto &fld: rec.fields) {
-            layerImpl << "    addField(\"" << fld.fldName << "\", " << fld.bitLength << ", " << fld.offset << ", "<< "PDF::" << fld.fldTypeName << ", " << fld.nextKey << ", " << fld.length << ", " << fld.scratchOffset << ", " << fld.outSeq <<");" << endl;
+            layerImpl << "    addField(\"" << fld.fldName << "\", " << fld.bitLength << ", " << fld.offset << ", "<< "PDF::" << fld.fldTypeName << ", " << fld.nextKey << ", " << fld.length << ", " << fld.scratchOffset << ", " << fld.outSeq << ", " << fld.tupleSeq <<");" << endl;
         if(fld.fldTypeName == "FLDTYPE_VARBYTES") {
             var_bytes = true;
         } else if(fld.fldTypeName == "FLDTYPE_OPTBYTES") {

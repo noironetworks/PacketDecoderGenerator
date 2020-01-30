@@ -3,7 +3,7 @@
 * <LayerType> <LayerKey> <LayerName> <HeaderLength(in Bytes)> <nextLayerType(Use none for no-known-nextlayer)> 
 * <optionLayerType(Use none for no-options>>
 *
-* <FieldType> <FieldName> <FieldLength(in Bits)> <argument number-1-based in layer display,-1/0 for don't display>
+* <FieldType> <FieldName> <FieldLength(in Bits)> <argument number-1-based in layer display,-1/0 for don't display> <argument-number-1-based in collected Tuple>
 * <Optional:One of the tokens: Key,Length or -><n= 0..3> where n is the scratchpad location this value shoudl be parsed into>
 * }
 * LayerType: name must match previous layer referring to it 
@@ -18,115 +18,115 @@
 {
     {
         Datalink 25944 Ethernet 14 EProto none
-        MAC dstMac 48 1
-        MAC srcMac 48 2
-        BYTES eType 16 3 Key
+        MAC dstMac 48 1 3
+        MAC srcMac 48 2 2
+        BYTES eType 16 3 4 Key
     }
     {
         EProto 33024 Qtag 4 EProto none
-        BITS pcp 3 0
-        BITS dei 1 0
-        BITS vid 12 1
-        BYTES eType 16 0 Key
+        BITS pcp 3 0 0
+        BITS dei 1 0 0
+        BITS vid 12 1 0
+        BYTES eType 16 0 4 Key
     }
     {
         EProto 2048 IPv4 20 IPProto IPOpt
-        BITS version 4 0
-        BITS headerLength 4 0 ->0
-        BITS dscp 6 4
-        BITS ecn 2 0
-        BYTES totalLength 16 3
-        BYTES id 16 6
-        BITS flags 3 7
-        BITS fragOffset 13 8
-        BYTES ttl 8 5
-        BYTES ipProto 8 9 Key
-        BYTES checkSum 16 0
-        IPV4ADDR srcAddress 32 1
-        IPV4ADDR dstAddress 32 2
+        BITS version 4 0 0
+        BITS headerLength 4 0 0 ->0
+        BITS dscp 6 4 0
+        BITS ecn 2 0 0
+        BYTES totalLength 16 3 0
+        BYTES id 16 6 0
+        BITS flags 3 7 0
+        BITS fragOffset 13 8 0
+        BYTES ttl 8 5 0
+        BYTES ipProto 8 9 7 Key
+        BYTES checkSum 16 0 0
+        IPV4ADDR srcAddress 32 1 5
+        IPV4ADDR dstAddress 32 2 6
     }
     {
         IPProto 6081 Geneve 8 Datalink GeneveOpt
-        BITS version 2 0
-        BITS optionsLength 6 0 ->0
-        BITS oamPacket 1 0
-        BITS criticalOption 1 0
-        BITS rsvd 6 0
-        BYTES eType 16 0 Key
-        BYTES vni 24 1
-        BYTES rsvd1 8 0
+        BITS version 2 0 0
+        BITS optionsLength 6 0 0 ->0
+        BITS oamPacket 1 0 0
+        BITS criticalOption 1 0 0
+        BITS rsvd 6 0 0
+        BYTES eType 16 0 0 Key
+        BYTES vni 24 1 0
+        BYTES rsvd1 8 0 0
     }
     {
         GeneveOpt 0 GeneveOpt 0 none none
-        BYTES class 16 0
-        BYTES type  8 0
-        BITS flags 3 0
-        BITS length 5 0 Length
-        VARBYTES data 0 0
+        BYTES class 16 0 0
+        BYTES type  8 0 0
+        BITS flags 3 0 0
+        BITS length 5 0 0 Length
+        VARBYTES data 0 0 0
     }
     {
         EProto 2054 ARP 28 none none
-        BYTES hwType 16 0
-        BYTES eType 16 0
-        BYTES hwSize 8 0
-        BYTES protSize 8 0
-        BYTES opCode 16 3
-        MAC senderMac 48 0
-        IPV4ADDR senderv4 32 1
-        MAC tgtMac 48 0
-        IPV4ADDR tgtv4 32 2
+        BYTES hwType 16 0 0
+        BYTES eType 16 0 0
+        BYTES hwSize 8 0 0
+        BYTES protSize 8 0 0
+        BYTES opCode 16 3 0
+        MAC senderMac 48 0 0
+        IPV4ADDR senderv4 32 1 0
+        MAC tgtMac 48 0 0
+        IPV4ADDR tgtv4 32 2 0
     }
     {
         IPProto 1 ICMP 8 none none
-        BYTES type 8 1
-        BYTES code 8 2
-        BYTES checksum 16 0
-        BYTES identifier 16 3
-        BYTES sequenceNum 16 4
+        BYTES type 8 1 0
+        BYTES code 8 2 0
+        BYTES checksum 16 0 0
+        BYTES identifier 16 3 0
+        BYTES sequenceNum 16 4 0
     }
     {
         IPProto 6 TCP 20 TCPOpt TCPOpt
-        BYTES srcPort 16 1
-        BYTES dstPort 16 2
-        BYTES seqNum 32 3
-        BYTES ackNum 32 4
-        BITS length 4 5 ->0
-        BITS rsvd 3 0
-        BITS NS 1 6
-        BITS CWR 1 6
-        BITS ECE 1 6
-        BITS URG 1 6
-        BITS ACK 1 6
-        BITS PSH 1 6
-        BITS RST 1 6
-        BITS SYN 1 6
-        BITS FIN 1 6
-        BYTES wdwSize 16 7
-        BYTES ckSum 16 0
-        BYTES urgentPtr 16 8
+        BYTES srcPort 16 1 8
+        BYTES dstPort 16 2 9
+        BYTES seqNum 32 3 0
+        BYTES ackNum 32 4 0
+        BITS length 4 5 0 ->0
+        BITS rsvd 3 0 0
+        BITS NS 1 6 0
+        BITS CWR 1 6 0
+        BITS ECE 1 6 0
+        BITS URG 1 6 0
+        BITS ACK 1 6 0
+        BITS PSH 1 6 0
+        BITS RST 1 6 0
+        BITS SYN 1 6 0
+        BITS FIN 1 6 0
+        BYTES wdwSize 16 7 0
+        BYTES ckSum 16 0 0
+        BYTES urgentPtr 16 8 0
     }
     {
         TCPOpt 0 TCPOpt 0 none none
-        BYTES kind 8 0 ->1
-        OPTBYTES length 8 0 Length
-        VARBYTES data 0 0
+        BYTES kind 8 0 0 ->1
+        OPTBYTES length 8 0 0 Length
+        VARBYTES data 0 0 0
     }
     {
         IPProto 17 UDP 8 none none
-        BYTES srcPort 16 1
-        BYTES dstPort 16 2
-        BYTES length 16 3
-        BYTES ckSum 16 0
+        BYTES srcPort 16 1 8
+        BYTES dstPort 16 2 9
+        BYTES length 16 3 0
+        BYTES ckSum 16 0 0
     }
     {
         EProto 34525 IPv6 40 IPProto none
-        BITS version 4 0
-        BITS trafficClass 8 4
-        BITS flowLabel 20 6
-        BYTES payloadLength 16 3
-        BYTES nextHeader 8 7 Key
-        BYTES hopLimit 8 5
-        IPV6ADDR srcAddress 128 1
-        IPV6ADDR dstAddress 128 2
+        BITS version 4 0 0
+        BITS trafficClass 8 4 0
+        BITS flowLabel 20 6 0
+        BYTES payloadLength 16 3 0
+        BYTES nextHeader 8 7 7 Key
+        BYTES hopLimit 8 5 0
+        IPV6ADDR srcAddress 128 1 5
+        IPV6ADDR dstAddress 128 2 6
     }
 }
